@@ -82,7 +82,7 @@ graph TB
 - **Excel Generation**: Dynamic spreadsheet creation with real data
 - **Interactive Visualizations**: HTML/Chart.js visualizations with live preview
 - **Session Memory**: Agent remembers context across multiple queries
-- **Thai Language Support**: Full support for Thai financial terminology
+- **Multi-Language Support**: Support for international financial terminology
 
 ## Tech Stack
 
