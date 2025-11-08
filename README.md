@@ -1,6 +1,6 @@
 # FinForge AI - AI-Driven Financial Document Analysis
 
-> **Winner Submission for LandingAI Hackathon 2024**
+> **Submission for Financial AI Hackathon Championship - 2025**
 > An intelligent financial document extraction and analysis system powered by LandingAI and Claude Agent SDK
 
 ## Overview
@@ -422,4 +422,4 @@ For questions or collaboration:
 
 ---
 
-**Built with** LandingAI ADE + Claude Agent SDK for LandingAI Hackathon 2024
+**Built with** LandingAI ADE + Claude Agent SDK for Financial AI Hackathon Championship - 2025
