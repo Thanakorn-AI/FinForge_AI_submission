@@ -9,6 +9,22 @@ FinForge AI is a complete end-to-end system that transforms complex financial PD
 
 **Demo Video**: [https://www.youtube.com/watch?v=gccDz-vPghs]
 
+## Why I Built This
+
+**The Problem:** Financial analysts spend countless hours manually extracting data from PDF reports, copying numbers into Excel, and creating visualizations. This process is:
+- ⏰ **Time-consuming** - Hours per document for manual extraction
+- ❌ **Error-prone** - Copy-paste mistakes are common
+- 📄 **Tedious** - Repetitive work that doesn't require human expertise
+- 🚫 **Blocks insights** - Most time goes to data entry, not actual analysis
+
+**The Solution:** FinForge AI automates the entire pipeline from PDF to insights:
+1. Upload picture-based or scanned financial PDFs
+2. AI extracts and classifies tables automatically
+3. Chat naturally with an AI agent to generate reports
+4. Get instant Excel files and visualizations
+
+**The Vision:** Empower financial analysts to focus on what they do best - strategic analysis and decision-making - by eliminating manual data extraction work.
+
 ## Why LandingAI?
 
 **LandingAI's Advanced Document Extraction (ADE) is mandatory for this system** because:
