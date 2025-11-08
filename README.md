@@ -27,12 +27,12 @@ graph TB
     A[User Uploads PDF] -->|Multi-file Upload| B[FastAPI Backend]
     B -->|PDF Files| C[LandingAI ADE API]
     C -->|Extracted Tables<br/>Markdown Format| D[AI Table Analyzer]
-    D -->|Claude Sonnet 4| E[Classified Tables<br/>ai_analysis.json]
+    D -->|Claude Sonnet 4.5| E[Classified Tables<br/>ai_analysis.json]
     E -->|CSV + Metadata| F[File System Storage]
 
     subgraph "Web Interface"
         G[React Frontend] -->|User Query| H[TypeScript Agent Server]
-        H -->|Claude Agent SDK| I[Claude Sonnet 4 Agent]
+        H -->|Claude Agent SDK| I[Claude Sonnet 4.5 Agent]
         I -->|Built-in Tools| J[Read/Bash/Glob Tools]
         J -->|Access Data| F
         I -->|Generates| K[Excel Artifacts]
@@ -57,7 +57,7 @@ graph TB
 
 ### Stage 2: AI-Powered Table Classification
 1. **AI Table Analyzer** reads extracted markdown
-2. **Claude Sonnet 4** classifies each table:
+2. **Claude Sonnet 4.5** classifies each table:
    - Balance Sheet (งบแสดงฐานะการเงิน)
    - Profit & Loss Statement (งบกำไรขาดทุน)
    - Cash Flow Statement (งบกระแสเงินสด)
@@ -77,7 +77,7 @@ graph TB
 ## Key Features
 
 - **Multi-PDF Processing**: Batch upload and process multiple financial reports
-- **Intelligent Table Classification**: Automatic categorization using Claude Sonnet 4
+- **Intelligent Table Classification**: Automatic categorization using Claude Sonnet 4.5
 - **Conversational Analysis**: Natural language queries for financial insights
 - **Excel Generation**: Dynamic spreadsheet creation with real data
 - **Interactive Visualizations**: HTML/Chart.js visualizations with live preview
@@ -100,7 +100,7 @@ graph TB
 
 ### AI/ML
 - **LandingAI Advanced Document Extraction (ADE)** - Table extraction from PDFs
-- **Claude Sonnet 4** (20250514) - Table classification and conversational analysis
+- **Claude Sonnet 4.5** (20250514) - Table classification and conversational analysis
 - Session-based conversation management
 
 ### Data Processing
@@ -275,7 +275,7 @@ def extract_tables_with_ade(pdf_path: str, api_key: str):
 # ai_table_analyzer.py
 def classify_tables_with_claude(markdown_content: str):
     """
-    Uses Claude Sonnet 4 to intelligently classify tables
+    Uses Claude Sonnet 4.5 to intelligently classify tables
     - Recognizes financial terminology
     - Identifies table types (balance sheet, P&L, etc.)
     - Extracts year information
@@ -375,8 +375,8 @@ The agent generates artifacts using special XML tags:
 
 - Requires active internet (LandingAI and Anthropic API calls)
 - PDF size limit: 50MB per file
-- Best results with Thai financial statements (trained on this format)
-- English financial statements work but may need prompt adjustments
+- Works with financial statements in any language (tested primarily with Thai documents)
+- Uses Claude's general knowledge - no custom model training required
 
 ## Future Enhancements
 
@@ -411,7 +411,7 @@ MIT License - See LICENSE file for details
 ## Acknowledgments
 
 - **LandingAI** for the Advanced Document Extraction API
-- **Anthropic** for Claude Sonnet 4 and Agent SDK
+- **Anthropic** for Claude Sonnet 4.5 and Agent SDK
 - Thai financial institutions for public financial statements used in testing
 
 ## Contact
