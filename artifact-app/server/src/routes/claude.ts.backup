@@ -1,0 +1,291 @@
+import { Router } from 'express';
+import { query } from '@anthropic-ai/claude-agent-sdk';
+import fs from 'fs';
+import path from 'path';
+import { parse } from 'csv-parse/sync';
+
+const router = Router();
+
+// Helper functions to read preprocessed PDF data
+function listExtractions(): any[] {
+  try {
+    const projectRoot = path.join(__dirname, '../../..');
+    const outputDir = path.join(projectRoot, 'output');
+
+    if (!fs.existsSync(outputDir)) {
+      return [];
+    }
+
+    return fs.readdirSync(outputDir)
+      .filter(d => fs.statSync(path.join(outputDir, d)).isDirectory())
+      .map(d => ({
+        name: d,
+        path: `output/${d}`,
+        has_analysis: fs.existsSync(path.join(outputDir, d, 'ai_analysis.json'))
+      }));
+  } catch (error) {
+    console.error('Error listing extractions:', error);
+    return [];
+  }
+}
+
+function readAnalysis(outputDir: string): any {
+  try {
+    const projectRoot = path.join(__dirname, '../../..');
+    const analysisPath = path.join(projectRoot, outputDir, 'ai_analysis.json');
+
+    if (!fs.existsSync(analysisPath)) {
+      return { error: 'AI analysis not found' };
+    }
+
+    return JSON.parse(fs.readFileSync(analysisPath, 'utf-8'));
+  } catch (error) {
+    return { error: String(error) };
+  }
+}
+
+function readCsv(outputDir: string, tableNumber: number): any {
+  try {
+    const projectRoot = path.join(__dirname, '../../..');
+    const fullOutputDir = path.join(projectRoot, outputDir);
+
+    const files = fs.readdirSync(fullOutputDir);
+    const csvFile = files.find(f =>
+      f.startsWith(`table_${tableNumber}_`) && f.endsWith('.csv')
+    );
+
+    if (!csvFile) {
+      return { error: `Table ${tableNumber} not found in ${outputDir}` };
+    }
+
+    const csvPath = path.join(fullOutputDir, csvFile);
+    const csvContent = fs.readFileSync(csvPath, 'utf-8');
+    const records = parse(csvContent, { columns: true });
+
+    return {
+      table_number: tableNumber,
+      file: csvFile,
+      rows: records.length,
+      data: records
+    };
+  } catch (error) {
+    return { error: String(error) };
+  }
+}
+
+// Build context from available PDF extractions
+function buildPdfContext(): string {
+  const extractions = listExtractions();
+
+  if (extractions.length === 0) {
+    return '';
+  }
+
+  let context = '\n\n**📊 AVAILABLE FINANCIAL DATA:**\n\n';
+
+  for (const extraction of extractions) {
+    if (!extraction.has_analysis) continue;
+
+    context += `\n### ${extraction.name}\n`;
+    context += `Path: ${extraction.path}\n`;
+
+    // Read analysis summary
+    const analysis = readAnalysis(extraction.path);
+    if (analysis && !analysis.error) {
+      context += `Tables: ${analysis.length}\n`;
+
+      // List key tables with types
+      const keyTables = analysis.filter((t: any) =>
+        ['balance_sheet', 'profit_loss', 'fixed_assets'].includes(t.table_type)
+      );
+
+      if (keyTables.length > 0) {
+        context += 'Key tables:\n';
+        for (const table of keyTables) {
+          context += `  - Table ${table.table_number}: ${table.table_type}`;
+          if (table.year) context += ` (Year: ${table.year})`;
+          context += '\n';
+        }
+      }
+
+      // Add sample of available data (first P&L or Balance Sheet table)
+      const sampleTable = keyTables.find((t: any) =>
+        t.table_type === 'profit_loss' || t.table_type === 'balance_sheet'
+      );
+
+      if (sampleTable) {
+        const csvData = readCsv(extraction.path, sampleTable.table_number);
+        if (csvData && !csvData.error && csvData.data) {
+          context += `\nSample data (Table ${sampleTable.table_number} - ${sampleTable.table_type}):\n`;
+          context += '```json\n';
+          context += JSON.stringify(csvData.data.slice(0, 5), null, 2); // First 5 rows
+          context += '\n```\n';
+        }
+      }
+    }
+  }
+
+  context += '\n**HOW TO ACCESS FULL DATA:**\n';
+  context += '1. Analysis summaries are in ai_analysis.json\n';
+  context += '2. Full table data is in CSV files (table_N_*.csv)\n';
+  context += '3. Use the paths above to reference specific tables\n';
+  context += '\n**IMPORTANT:** Use REAL data from above when creating artifacts!\n';
+
+  return context;
+}
+
+// System prompt for artifact generation
+function getArtifactSystemPrompt(): string {
+  return `You are a financial analysis assistant with access to extracted and preprocessed PDF data.
+
+You can create rich artifacts using this format (like Claude.ai):
+
+<antArtifact identifier="unique-id" type="artifact-type" title="Display Title">
+  [artifact content here]
+</antArtifact>
+
+**Artifact Types:**
+
+1. **application/vnd.ant.code** - HTML, React, JavaScript code
+   <antArtifact identifier="chart-viz" type="application/vnd.ant.code" language="html" title="Revenue Chart">
+   <!DOCTYPE html>
+   <html>...</html>
+   </antArtifact>
+
+2. **application/vnd.ant.spreadsheet** - Excel data (JSON format)
+   <antArtifact identifier="pl-report" type="application/vnd.ant.spreadsheet" title="P&L Report">
+   {
+     "sheets": [
+       {
+         "name": "Profit & Loss",
+         "data": [
+           ["Item", "2023", "2022"],
+           ["Revenue", 1000000, 900000]
+         ]
+       }
+     ]
+   }
+   </antArtifact>
+
+3. **application/vnd.ant.chart** - Chart data (for Recharts)
+   <antArtifact identifier="revenue-trend" type="application/vnd.ant.chart" title="Revenue Trend">
+   {
+     "type": "line",
+     "data": [...],
+     "xAxis": "year",
+     "yAxis": "revenue"
+   }
+   </antArtifact>
+
+4. **text/markdown** - Formatted documents
+   <antArtifact identifier="summary" type="text/markdown" title="Financial Summary">
+   # Analysis Summary
+   ...
+   </antArtifact>
+
+**When to Create Artifacts:**
+- User requests charts, tables, or visualizations
+- Creating substantial code (>15 lines)
+- Generating reports or documents
+- Self-contained content user might want to edit/download
+
+Always be helpful and create artifacts naturally in conversation!`;
+}
+
+// Streaming chat endpoint with Agent SDK
+router.post('/chat', async (req, res) => {
+  const { message } = req.body;
+
+  console.log('\n📨 Received message:', message.substring(0, 200));
+
+  // Build context from available PDFs
+  const pdfContext = buildPdfContext();
+
+  if (pdfContext) {
+    console.log('📊 Injecting PDF data context');
+  } else {
+    console.log('ℹ️  No PDF data available yet');
+  }
+
+  // Combine user message with PDF context
+  const enrichedPrompt = pdfContext
+    ? `${pdfContext}\n\n---\n\n**User Question:**\n${message}`
+    : message;
+
+  // Set up SSE
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+
+  try {
+    // Use Agent SDK query() with enriched prompt
+    const response = query({
+      prompt: enrichedPrompt,
+      options: {
+        model: 'claude-sonnet-4-20250514',
+        systemPrompt: getArtifactSystemPrompt(),
+        includePartialMessages: true  // Enable streaming events
+      }
+    });
+
+    // Stream messages to client
+    let finalCompleteMessage = '';
+
+    for await (const msg of response) {
+      // Handle streaming events (token-by-token from Messages API)
+      if (msg.type === 'stream_event') {
+        const event = (msg as any).event;
+
+        // Handle content_block_delta for streaming text
+        if (event?.type === 'content_block_delta' && event.delta?.type === 'text_delta') {
+          res.write(`data: ${JSON.stringify({
+            type: 'text_delta',
+            content: event.delta.text,
+            partial: true
+          })}\n\n`);
+        }
+      }
+      // Handle complete assistant messages - CAPTURE for artifact detection
+      else if (msg.type === 'assistant' && (msg as any).message) {
+        const message = (msg as any).message;
+        const textContent = message.content
+          .filter((block: any) => block.type === 'text')
+          .map((block: any) => block.text)
+          .join('');
+
+        // Store complete message for final send
+        if (textContent) {
+          finalCompleteMessage = textContent;
+        }
+      }
+      // Handle tool progress
+      else if (msg.type === 'tool_progress') {
+        console.log('🔧 Tool called:', (msg as any).info);
+        res.write(`data: ${JSON.stringify({
+          type: 'tool_use',
+          info: (msg as any).info
+        })}\n\n`);
+      }
+    }
+
+    // Send final complete message with artifact tags
+    if (finalCompleteMessage) {
+      res.write(`data: ${JSON.stringify({
+        type: 'text_complete',
+        content: finalCompleteMessage
+      })}\n\n`);
+    }
+
+    res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+    res.end();
+  } catch (error) {
+    console.error('Claude Agent error:', error);
+    res.write(`data: ${JSON.stringify({
+      type: 'error',
+      error: String(error)
+    })}\n\n`);
+    res.end();
+  }
+});
+
+export default router;

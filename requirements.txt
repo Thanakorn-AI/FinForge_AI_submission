@@ -1,0 +1,34 @@
+# FinForge AI - Python Dependencies
+# LandingAI Hackathon 2024 Submission
+
+# ======================================
+# Core AI/ML Dependencies
+# ======================================
+anthropic>=0.72.0                  # Claude API client
+python-dotenv>=1.1.1               # Environment variable management
+
+# ======================================
+# LandingAI Integration (REQUIRED)
+# ======================================
+agentic-doc>=0.3.3                 # LandingAI Advanced Document Extraction
+
+# ======================================
+# Data Processing & Excel Generation
+# ======================================
+pandas>=1.5.3                      # Data manipulation and analysis
+openpyxl>=3.1.5                    # Excel file generation and reading
+beautifulsoup4>=4.14.2             # HTML/XML parsing
+html5lib>=1.1                      # HTML parser
+lxml>=6.0.2                        # XML/HTML processing
+
+# ======================================
+# FastAPI Backend
+# ======================================
+fastapi==0.104.1                   # Modern web framework
+uvicorn[standard]==0.24.0          # ASGI server
+python-multipart==0.0.6            # File upload support
+
+# ======================================
+# Additional PDF Processing
+# ======================================
+pypdf>=5.9.0                       # PDF manipulation utilities
