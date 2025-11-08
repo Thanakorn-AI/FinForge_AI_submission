@@ -5,7 +5,7 @@
 
 ## Overview
 
-FinForge AI is a complete end-to-end system that transforms complex Thai financial PDF documents into interactive Excel reports and visualizations using multi-stage AI processing. The system combines LandingAI's Advanced Document Extraction (ADE) with Claude's Agent SDK to provide an intelligent, conversational interface for financial analysis.
+FinForge AI is a complete end-to-end system that transforms complex financial PDF documents into interactive Excel reports and visualizations using multi-stage AI processing. The system combines LandingAI's Advanced Document Extraction (ADE) with Claude's Agent SDK to provide an intelligent, conversational interface for financial analysis.
 
 **Demo Video**: [Link to your demo video]
 
@@ -14,7 +14,7 @@ FinForge AI is a complete end-to-end system that transforms complex Thai financi
 **LandingAI's Advanced Document Extraction (ADE) is mandatory for this system** because:
 
 1. **Handles Picture-based PDFs**: Many financial statements are scanned documents or image-based PDFs, not text-based PDFs
-2. **Complex Table Structures**: Financial statements contain nested tables, multi-column layouts, and Thai language content
+2. **Complex Table Structures**: Financial statements contain nested tables, multi-column layouts, and multi-language content
 3. **Large File Processing**: Enterprise financial reports can be 50+ pages with hundreds of tables
 4. **Accuracy**: LandingAI's specialized table extraction models significantly outperform generic OCR solutions
 
@@ -50,7 +50,7 @@ graph TB
 ## Processing Pipeline
 
 ### Stage 1: PDF Upload & Extraction
-1. **User uploads Thai financial PDFs** (picture-based or text-based)
+1. **User uploads financial PDFs** (picture-based or text-based)
 2. **FastAPI receives files** and forwards to LandingAI ADE
 3. **LandingAI extracts tables** using computer vision + LLM
 4. **Output**: Markdown files with structured table data
@@ -207,7 +207,7 @@ npm run dev
 
 ### 1. Upload Financial PDFs
 - Click "Upload PDFs" button in the sidebar
-- Select one or more Thai financial statement PDFs
+- Select one or more financial statement PDFs
 - Wait for LandingAI extraction (10-30 seconds per document)
 
 ### 2. Ask Questions
@@ -276,7 +276,7 @@ def extract_tables_with_ade(pdf_path: str, api_key: str):
 def classify_tables_with_claude(markdown_content: str):
     """
     Uses Claude Sonnet 4 to intelligently classify tables
-    - Recognizes Thai financial terminology
+    - Recognizes financial terminology
     - Identifies table types (balance sheet, P&L, etc.)
     - Extracts year information
     - Outputs structured JSON metadata
